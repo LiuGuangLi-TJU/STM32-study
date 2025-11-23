@@ -41,26 +41,28 @@ int main(void)
   led_init();// LED初始化
   lcd_init();  // LCD初始化
   usart_init(115200);
-  uint8_t len ;  
-  uint16_t times = 0; 
+  uint16_t len =0;
   while (1)
   {
     if(g_usart_rx_sta & 0x8000){
       len = g_usart_rx_sta & 0x3fff;
-      printf("\r\nmessage:\r\n");
-      HAL_UART_Transmit(& g_uart1_handle, (uint8_t *)g_usart_rx_buf, len, 1000);
-      while(__HAL_UART_GET_FLAG(& g_uart1_handle, UART_FLAG_TC)!= SET);
-      printf("\r\n");
-      g_usart_rx_sta = 0;
-
-    }
-    else{
-      times++;
-      if(times % 50 == 0){
-        printf("\r\n 实验 \r\n");
+      if(len==0){
+        g_usart_rx_sta = 0;
       }
-      if(times % 20 ==0)  LED0_TOGGLE();
-      delay_ms(10);
+      if (len < USART_REC_LEN)                     /* 确保以 '\0' 结束（可作为字符串处理） */
+         g_usart_rx_buf[len] = '\0';
+      if (len == 1 && g_usart_rx_buf[0] == 'A') {
+        LED0_TOGGLE();
+        printf("ok,toggle led 0\r\n");
+      }
+      else if (len == 1 && g_usart_rx_buf[0] == 'B') {
+        LED1_TOGGLE();
+        printf("ok,toggle led 1\r\n");
+      }   
+      else {
+        printf("message wrong\r\n");
+      }
+    g_usart_rx_sta = 0;
     }
 
   }
